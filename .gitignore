@@ -204,3 +204,10 @@ trudido-clean/
 # Local backup/tooling artifacts
 android_icon_backups/
 replace_buttons.py
+
+# Self-hosted sync server
+server/backend/**/__pycache__/
+server/backend/.pytest_cache/
+server/backend/.venv/
+server/backend/*.db
+server/backend/data/

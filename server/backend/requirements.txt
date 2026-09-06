@@ -1,0 +1,8 @@
+# Pinned, like peakpace's, so a rebuild months from now produces the same image.
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+pydantic-settings==2.3.4
+sqlalchemy==2.0.31
+# Blob uploads arrive as multipart form data.
+python-multipart==0.0.9

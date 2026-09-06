@@ -1,0 +1,56 @@
+# Trudido self-hosted sync.
+#
+#   docker compose up -d --build
+#
+# Sync API and Swagger docs   http://<server>:8000/docs
+# Browser app                 http://<server>:8080
+#
+# The phone app keeps working with this stack switched off; it is a sync peer,
+# not a source of truth.
+
+services:
+  backend:
+    build:
+      context: ./server/backend
+      dockerfile: Dockerfile
+    container_name: trudido-backend
+    restart: unless-stopped
+    environment:
+      - PROJECT_NAME=Trudido Sync
+      - DATA_DIR=/data
+      - DATABASE_URL=sqlite:////db/trudido.db
+      - BLOB_DIR=/data/blobs
+      # Empty leaves sync open, which is fine on an isolated home network.
+      # Set this to any value to require it, and enter the same value in the
+      # app under Settings -> Sync.
+      - API_AUTH_TOKEN=
+      # Largest single note attachment, in megabytes. Video notes are the
+      # reason this is not smaller.
+      - MAX_BLOB_MB=256
+    volumes:
+      # The database gets its own named volume: SQLite over an SMB/NFS mount
+      # corrupts under lock contention, so it stays on local disk while the
+      # attachments -- ordinary files -- live on the NAS share.
+      - trudido_db:/db
+      - /opt/trudido/data:/data
+    ports:
+      - "8000:8000"
+
+  # The browser build is not wired up yet, so this service sits behind a
+  # profile and `docker compose up -d` brings up the backend alone. Delete the
+  # `profiles:` line once server/web/Dockerfile exists.
+  web:
+    profiles: ["web"]
+    build:
+      context: .
+      dockerfile: server/web/Dockerfile
+    container_name: trudido-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  trudido_db:
+    driver: local
