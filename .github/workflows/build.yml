@@ -13,10 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Must satisfy the floor recorded in pubspec.lock, currently
+      # flutter >=3.44.0 / dart >=3.12.0 (flutter_quill 11.5.1 sets it). This
+      # was pinned to 3.35.7, which ships Dart 3.9.2 and could not resolve the
+      # dependency set at all.
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.35.7"
+          flutter-version: "3.47.2"
 
       - name: Restore keystore
         run: |
