@@ -50,8 +50,10 @@ services:
     ports:
       - "${TRUDIDO_API_PORT:-8001}:8000"
 
-  # The browser app. nginx serves the Flutter build and proxies /api to the
-  # backend, so the app is reachable at one address with no CORS involved.
+  # The browser app: nginx serving a prebuilt bundle from ./web-build, with
+  # /api proxied to the backend so it is all one origin and no CORS applies.
+  # The bundle comes from CI (the web-app artifact) or from scripts/build-web.sh
+  # on a machine that has Flutter -- this server never compiles it.
   web:
     build:
       context: .

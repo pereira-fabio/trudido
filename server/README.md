@@ -43,7 +43,32 @@ host port above, not the container's — and the token, then press
 
 ## The browser app
 
-`http://<server>:8080` serves a browser build of Trudido. nginx proxies `/api`
+`http://<server>:8080` serves a browser build of Trudido.
+
+### Installing it
+
+The container serves a prebuilt bundle and does not compile one. Building
+Flutter needs a ~1.5 GB SDK and several gigabytes of working space, which is a
+poor trade for a NAS producing a few megabytes of static files.
+
+Take it from CI — **Actions → Analyze →** the finished run → the **`web-app`**
+artifact:
+
+```bash
+cd /opt/trudido
+unzip -o web-app.zip -d web-build
+docker compose up -d --build web
+```
+
+Or build it yourself, on a machine that has Flutter:
+
+```bash
+./scripts/build-web.sh
+```
+
+Until a bundle is in `web-build/`, the page explains how to add one. The sync
+API is unaffected either way.
+ nginx proxies `/api`
 to the backend from the same origin, so the address to enter under **Sync** is
 just the address of the page itself, and no CORS is involved.
 

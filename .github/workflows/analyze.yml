@@ -43,6 +43,16 @@ jobs:
       - name: Build web
         run: flutter build web --release -t lib/main_web.dart
 
+      # The deployable artifact. The server serves this rather than building
+      # it: compiling Flutter needs gigabytes of disk that a NAS should not
+      # have to give up for a few megabytes of static files.
+      - name: Upload browser app
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app
+          path: build/web
+          if-no-files-found: error
+
   server:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Trudido - browser app not installed</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; max-width: 40rem;
+           margin: 12vh auto; padding: 0 1.5rem; color: #333; }
+    code { background: #f2f2f2; padding: .15em .4em; border-radius: 3px; }
+    pre { background: #f7f7f7; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a1a; color: #ccc; }
+      code, pre { background: #262626; }
+    }
+  </style>
+</head>
+<body>
+  <h1>The browser app has not been added yet</h1>
+  <p>
+    This container serves a prebuilt Flutter web bundle; it does not compile
+    one, because doing that needs several gigabytes of disk that a NAS is
+    usually better off keeping.
+  </p>
+  <p>Get the bundle from the <strong>Analyze</strong> workflow in GitHub Actions
+     &rarr; the finished run &rarr; the <code>web-app</code> artifact. Then:</p>
+  <pre>cd /opt/trudido
+unzip -o ~/Downloads/web-app.zip -d web-build
+docker compose up -d --build web</pre>
+  <p>
+    The sync API is unaffected and is running normally at <code>/api/v1/</code>.
+  </p>
+</body>
+</html>

@@ -211,3 +211,8 @@ server/backend/.pytest_cache/
 server/backend/.venv/
 server/backend/*.db
 server/backend/data/
+
+# Built browser app. The placeholder index.html is tracked; the compiled
+# bundle that replaces it is not.
+web-build/*
+!web-build/index.html
