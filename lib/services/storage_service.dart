@@ -361,6 +361,9 @@ class StorageService {
   // Getter for folder repository
   static HiveFolderRepository? get folderRepository => _folderRepository;
 
+  static HiveFolderTemplateRepository? get templateRepository =>
+      _templateRepository;
+
   /// Finds and replaces the welcome note if it hasn't been updated yet.
   /// Uses a SharedPreferences key to ensure the migration only runs once.
   static Future<void> _migrateWelcomeNote() async {
@@ -488,7 +491,7 @@ Type **/** to open the insert menu:
     try {
       _todosLazyBox ??= await Hive.openLazyBox<Todo>(_todosBoxName);
       if (_todosLazyBox != null) {
-        todo.updatedAt = DateTime.now();
+        if (!SyncQueue.suppressed) todo.updatedAt = DateTime.now();
         await _todosLazyBox!.put(todo.id, todo);
         SyncQueue.record(
           SyncCollection.todos,
@@ -513,7 +516,7 @@ Type **/** to open the insert menu:
         if (todo != null) {
           todo.isDeleted = true;
           todo.deletedAt = DateTime.now();
-          todo.updatedAt = todo.deletedAt;
+          if (!SyncQueue.suppressed) todo.updatedAt = todo.deletedAt;
           await _todosLazyBox!.put(id, todo);
           // A binned task is still a record the other device must show in its
           // own bin, so this is an upsert carrying isDeleted, not a tombstone.
@@ -547,7 +550,7 @@ Type **/** to open the insert menu:
       if (todo != null) {
         todo.isDeleted = false;
         todo.deletedAt = null;
-        todo.updatedAt = DateTime.now();
+        if (!SyncQueue.suppressed) todo.updatedAt = DateTime.now();
         await _todosLazyBox!.put(id, todo);
         SyncQueue.record(
           SyncCollection.todos,
@@ -563,7 +566,7 @@ Type **/** to open the insert menu:
     try {
       _todosLazyBox ??= await Hive.openLazyBox<Todo>(_todosBoxName);
       if (_todosLazyBox != null) {
-        todo.updatedAt = DateTime.now();
+        if (!SyncQueue.suppressed) todo.updatedAt = DateTime.now();
         await _todosLazyBox!.put(todo.id, todo);
         SyncQueue.record(
           SyncCollection.todos,
@@ -658,7 +661,7 @@ Type **/** to open the insert menu:
     try {
       _eventsLazyBox ??= await Hive.openLazyBox<Event>(_eventsBoxName);
       if (_eventsLazyBox != null) {
-        event.updatedAt = DateTime.now();
+        if (!SyncQueue.suppressed) event.updatedAt = DateTime.now();
         await _eventsLazyBox!.put(event.id, event);
         SyncQueue.record(
           SyncCollection.events,
@@ -683,7 +686,7 @@ Type **/** to open the insert menu:
         if (event != null) {
           event.isDeleted = true;
           event.deletedAt = DateTime.now();
-          event.updatedAt = event.deletedAt;
+          if (!SyncQueue.suppressed) event.updatedAt = event.deletedAt;
           await _eventsLazyBox!.put(id, event);
           SyncQueue.record(
             SyncCollection.events,
@@ -715,7 +718,7 @@ Type **/** to open the insert menu:
       if (event != null) {
         event.isDeleted = false;
         event.deletedAt = null;
-        event.updatedAt = DateTime.now();
+        if (!SyncQueue.suppressed) event.updatedAt = DateTime.now();
         await _eventsLazyBox!.put(id, event);
         SyncQueue.record(
           SyncCollection.events,
@@ -731,7 +734,7 @@ Type **/** to open the insert menu:
     try {
       _eventsLazyBox ??= await Hive.openLazyBox<Event>(_eventsBoxName);
       if (_eventsLazyBox != null) {
-        event.updatedAt = DateTime.now();
+        if (!SyncQueue.suppressed) event.updatedAt = DateTime.now();
         await _eventsLazyBox!.put(event.id, event);
         SyncQueue.record(
           SyncCollection.events,
@@ -895,7 +898,7 @@ Type **/** to open the insert menu:
     if (note != null) {
       note.isDeleted = false;
       note.deletedAt = null;
-      note.updatedAt = DateTime.now();
+      if (!SyncQueue.suppressed) note.updatedAt = DateTime.now();
       await _notesBox!.put(id, note);
       SyncQueue.record(
         SyncCollection.notes,
@@ -928,7 +931,7 @@ Type **/** to open the insert menu:
   // Note folders operations
   static Future<void> saveNoteFolder(NoteFolder folder) async {
     if (_noteFoldersBox == null) return;
-    folder.updatedAt = DateTime.now();
+    if (!SyncQueue.suppressed) folder.updatedAt = DateTime.now();
     await _noteFoldersBox!.put(folder.id, folder);
     SyncQueue.record(
       SyncCollection.noteFolders,
@@ -1802,6 +1805,10 @@ Type **/** to open the insert menu:
   }
 
   /// Get all saved custom theme JSON strings
+  /// Custom themes keyed by id, as stored. Sync needs the ids; the existing
+  /// getAllCustomThemes() returns only the values.
+  static Map<String, String> getAllCustomThemesRaw() => _getCustomThemesMap();
+
   static List<String> getAllCustomThemes() {
     return _getCustomThemesMap().values.toList();
   }

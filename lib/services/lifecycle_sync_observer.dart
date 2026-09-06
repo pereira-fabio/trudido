@@ -17,6 +17,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'notification_action_sync.dart';
+import 'sync/sync_service.dart';
 import 'widget_service.dart';
 import '../providers/app_providers.dart';
 import '../controllers/task_controller.dart';
@@ -80,6 +81,9 @@ class LifecycleSyncObserver with WidgetsBindingObserver {
       NotificationActionSync.instance.syncPending(ref);
       _processPendingWidgetToggles();
       _updateWidgetData();
+      // Fire and forget: a self-hosted server that is down or off the network
+      // must never delay or interrupt the app coming back to the foreground.
+      SyncService.instance.syncOnResume();
     }
   }
 }

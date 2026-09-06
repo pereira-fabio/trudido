@@ -156,6 +156,7 @@ class Note extends HiveObject {
       'lastReadMode': lastReadMode,
       if (colorValue != null) 'colorValue': colorValue,
       'tags': tags,
+      'deletedAt': deletedAt?.toIso8601String(),
     };
   }
 
@@ -177,6 +178,9 @@ class Note extends HiveObject {
       lastReadMode: json['lastReadMode'] as bool? ?? false,
       colorValue: json['colorValue'] as int?,
       tags: List<String>.from(json['tags'] ?? const <String>[]),
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.parse(json['deletedAt'] as String)
+          : null,
     );
   }
 }

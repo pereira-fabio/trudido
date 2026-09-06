@@ -35,6 +35,7 @@ import 'services/theme_service.dart';
 import 'services/widget_service.dart';
 import 'services/notification_service.dart';
 import 'services/notification_action_sync.dart';
+import 'services/sync/sync_service.dart';
 import 'providers/app_providers.dart';
 import 'providers/filter_providers.dart';
 import 'services/folder_provider.dart';
@@ -523,6 +524,17 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap>
         });
         // Update widget with current tasks after storage is ready
         _updateWidgetData();
+
+        // Self-hosted sync. init() only reads settings and opens the outbox;
+        // it never contacts the network, so a server that is down or absent
+        // cannot slow down or break startup. The first real sync happens on
+        // resume, or when the user taps Sync now.
+        try {
+          await SyncService.instance.init();
+          debugPrint('[Bootstrap] ✓ SyncService initialized');
+        } catch (e) {
+          debugPrint('[Bootstrap] SyncService init skipped: $e');
+        }
       } catch (e, st) {
         debugPrint('[Bootstrap] ✗ Initialization error: $e');
         debugPrint('[Bootstrap] Stack trace: $st');

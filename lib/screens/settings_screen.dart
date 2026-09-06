@@ -27,6 +27,7 @@ import 'comprehensive_notification_settings.dart';
 import 'app_lock_settings_page.dart';
 import 'data_management_screen.dart';
 import 'experimental_settings_screen.dart';
+import 'sync_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -92,6 +93,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (_matchesSearch('data management calendar sync import backup')) ...[
         _buildSectionHeader(context, 'Data Management'),
         _buildDataManagementTile(),
+      ],
+
+      // Self-hosted sync
+      if (_matchesSearch(
+        'sync server self-hosted nas backup remote devices',
+      )) ...[
+        _buildSectionHeader(context, 'Sync'),
+        _buildSyncTile(),
       ],
 
       // About Section
@@ -183,6 +192,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const PersonalizationScreen(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSyncTile() {
+    return ListTile(
+      leading: ScaledIcon(Icons.cloud_sync_outlined),
+      title: const Text('Sync'),
+      subtitle: const Text('Keep your data on a server you run'),
+      trailing: ScaledIcon(Icons.arrow_forward_ios),
+      onTap: () {
+        ref.read(recentSettingsProvider.notifier).record('sync');
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const SyncSettingsScreen(),
           ),
         );
       },

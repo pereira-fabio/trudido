@@ -81,6 +81,11 @@ dependencies:
   # Open external URLs (e.g., GitHub link in About screen)
   url_launcher: ^6.1.10
 
+  # Self-hosted sync. Already resolved transitively at this version; promoted
+  # to a direct dependency because sync imports it, and because it is the one
+  # HTTP client that works unchanged on both Android and web.
+  http: ^1.6.0
+
   # (Removed flutter_local_notifications + related timezone/permission packages in favor of pure native Android implementation)
 
   # File picker for import/export (upgrade to fix v1 embedding + desktop default plugin warnings)

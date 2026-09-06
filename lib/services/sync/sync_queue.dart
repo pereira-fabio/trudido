@@ -38,6 +38,28 @@ class SyncQueue {
   /// never self-hosts pays nothing — no box, no writes, no growth.
   static bool enabled = false;
 
+  /// True while changes pulled from the server are being written locally.
+  ///
+  /// This guards two things at once, and both matter. It keeps the outbox from
+  /// re-queueing a record we just received, which would push it straight back
+  /// and, with two devices syncing, never settle. And it tells StorageService
+  /// to leave `updatedAt` alone, so the server's timestamp survives the write
+  /// instead of being stamped to now -- which would make every pulled record
+  /// look like the newest edit in existence.
+  static bool suppressed = false;
+
+  /// Runs [body] with remote-apply semantics, restoring the previous state
+  /// even if it throws. Nested calls are safe.
+  static Future<T> applyingRemote<T>(Future<T> Function() body) async {
+    final previous = suppressed;
+    suppressed = true;
+    try {
+      return await body();
+    } finally {
+      suppressed = previous;
+    }
+  }
+
   static bool get isOpen => _box != null;
 
   /// Opens the outbox. Safe to call more than once.
@@ -65,7 +87,7 @@ class SyncQueue {
     SyncOp op = SyncOp.upsert,
     DateTime? updatedAt,
   }) {
-    if (!enabled) return;
+    if (!enabled || suppressed) return;
     final box = _box;
     if (box == null) return;
     try {
@@ -125,6 +147,25 @@ class SyncQueue {
     return out;
   }
 
+  /// The queued change for one record, if any.
+  ///
+  /// Pull consults this before writing an incoming record: a local edit that
+  /// has not been sent yet is not visible to the server, so the server's copy
+  /// is not automatically the newer one and must not simply overwrite it.
+  static SyncQueueEntry? entryFor(String collection, String id) {
+    final raw = _box?.get(_key(collection, id));
+    if (raw == null) return null;
+    try {
+      return SyncQueueEntry.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Drops one queued change, for when an incoming record supersedes it.
+  static Future<void> remove(String collection, String id) async =>
+      _box?.delete(_key(collection, id));
+
   static int get length => _box?.length ?? 0;
 
   /// Clears entries the server accepted. Entries recorded *during* the push
@@ -142,17 +183,23 @@ class SyncQueue {
   /// Enqueues a whole collection, for the first sync after sync is switched on
   /// (or after a "resync everything" from settings). Without this, records
   /// that predate sync would never be offered to the server.
-  static Future<void> markAllDirty(String collection, Iterable<String> ids) async {
+  ///
+  /// Takes each record's own timestamp rather than stamping `now`: a baseline
+  /// push carrying "everything changed this second" would beat genuinely newer
+  /// edits already on the server and silently roll another device back.
+  static Future<void> markAllDirty(
+    String collection,
+    Map<String, DateTime> idsWithTimestamps,
+  ) async {
     final box = _box;
     if (box == null) return;
-    final now = DateTime.now().toUtc().toIso8601String();
     await box.putAll({
-      for (final id in ids)
-        _key(collection, id): jsonEncode({
+      for (final entry in idsWithTimestamps.entries)
+        _key(collection, entry.key): jsonEncode({
           'collection': collection,
-          'id': id,
+          'id': entry.key,
           'op': SyncOp.upsert.wire,
-          'updated_at': now,
+          'updated_at': entry.value.toUtc().toIso8601String(),
         }),
     });
   }
