@@ -1,0 +1,55 @@
+# Fast feedback on any branch: does it compile, and do the tests pass?
+#
+# The release workflow needs the signing keystore and takes about ten minutes.
+# This needs no secrets and finishes in about two, so a branch can be checked
+# before asking for an APK.
+
+name: Analyze
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.7"
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # Non-blocking: the project has never been analysed in CI, so a first run
+      # may surface pre-existing findings that have nothing to do with the
+      # branch under test. Read the output; do not let it gate the build.
+      - name: Analyze
+        continue-on-error: true
+        run: flutter analyze
+
+      # This one does gate. A compile error is unambiguous, and the existing
+      # widget tests are the only automated check the app side has.
+      - name: Test
+        run: flutter test
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        working-directory: server/backend
+        run: pip install -r requirements-dev.txt
+
+      - name: Test sync server
+        working-directory: server/backend
+        run: python -m pytest tests/ -q

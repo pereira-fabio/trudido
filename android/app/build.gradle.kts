@@ -42,7 +42,13 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = "D:/keystores/trudido-release-key.jks"
+            // CI restores the keystore to a temporary path and exports
+            // TRUDIDO_KEYSTORE. Without reading it, only the hardcoded Windows
+            // path below is ever checked, so on a Linux runner the config is
+            // silently skipped and the release APK comes out unsigned -- which
+            // Android then refuses to install.
+            val keystorePath = System.getenv("TRUDIDO_KEYSTORE")
+                ?: "D:/keystores/trudido-release-key.jks"
             val keystoreFile = file(keystorePath)
 
             // Only configure signing if keystore exists and env vars are set
