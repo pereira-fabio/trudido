@@ -41,7 +41,7 @@ jobs:
           if [ -n "$missing" ]; then
             echo "::error::Missing repository secrets:$missing"
             echo "::error::Add them under Settings -> Secrets and variables -> Actions."
-            echo "::error::KEYSTORE_BASE64 is 'base64 -w0 trudido-release-key.jks'."
+            echo "::error::See docs/building.md for generating a keystore and filling these in."
             exit 1
           fi
           echo "All four signing secrets are present."
