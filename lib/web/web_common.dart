@@ -41,7 +41,7 @@ class WebHeader extends ConsumerWidget {
               border: OutlineInputBorder(),
             ),
             onChanged: (value) =>
-                ref.read(searchQueryProvider.notifier).state = value,
+                ref.read(searchQueryProvider.notifier).update(value),
           ),
         ),
         if (trailing != null) trailing!,

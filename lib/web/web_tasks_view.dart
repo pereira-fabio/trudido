@@ -150,7 +150,7 @@ class _WebTasksViewState extends ConsumerState<WebTasksView> {
                           selected: selected == null,
                           onSelected: (_) => ref
                               .read(selectedFolderProvider.notifier)
-                              .state = null,
+                              .update(null),
                         ),
                       ),
                       for (final folder in list)
@@ -161,7 +161,7 @@ class _WebTasksViewState extends ConsumerState<WebTasksView> {
                             selected: selected == folder.id,
                             onSelected: (_) => ref
                                 .read(selectedFolderProvider.notifier)
-                                .state = selected == folder.id ? null : folder.id,
+                                .update(selected == folder.id ? null : folder.id),
                           ),
                         ),
                     ],

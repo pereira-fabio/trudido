@@ -26,6 +26,7 @@ import '../repositories/notes_repository.dart';
 import '../repositories/task_repository.dart';
 import '../services/storage_service.dart';
 import '../services/sync/sync_service.dart';
+import '../utils/state_notifiers.dart';
 
 /// State for the browser build.
 ///
@@ -48,10 +49,12 @@ final folderRepositoryProvider = Provider<HiveFolderRepository?>(
 );
 
 /// Bumped after anything writes, to make the lists re-read.
-final dataVersionProvider = StateProvider<int>((ref) => 0);
+final dataVersionProvider = stateProvider<int>(0);
 
 void invalidateData(WidgetRef ref) {
-  ref.read(dataVersionProvider.notifier).state++;
+  ref
+      .read(dataVersionProvider.notifier)
+      .update(ref.read(dataVersionProvider) + 1);
 }
 
 final tasksProvider = FutureProvider<List<Todo>>((ref) async {
@@ -94,9 +97,9 @@ final syncStatusProvider = StreamProvider<SyncStatus>(
 );
 
 /// Which folder the task list is filtered to; null means all.
-final selectedFolderProvider = StateProvider<String?>((ref) => null);
+final selectedFolderProvider = stateProvider<String?>(null);
 
 /// Which note folder the note list is filtered to; null means all.
-final selectedNoteFolderProvider = StateProvider<String?>((ref) => null);
+final selectedNoteFolderProvider = stateProvider<String?>(null);
 
-final searchQueryProvider = StateProvider<String>((ref) => '');
+final searchQueryProvider = stateProvider<String>('');

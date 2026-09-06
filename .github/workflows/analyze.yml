@@ -25,12 +25,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # Non-blocking: the project has never been analysed in CI, so a first run
-      # may surface pre-existing findings that have nothing to do with the
-      # branch under test. Read the output; do not let it gate the build.
+      # Errors gate; warnings and lints do not. The project has never been
+      # analysed in CI and has pre-existing findings unrelated to any given
+      # branch, but an actual error -- an undefined name, a bad signature --
+      # means the code cannot compile and there is no reason to let it through.
+      #
+      # This was continue-on-error, which reports the step as green even when
+      # it fails, and it duly hid a removed-API error until the web build
+      # tripped over it minutes later.
       - name: Analyze
-        continue-on-error: true
-        run: flutter analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       # This one does gate. A compile error is unambiguous, and the existing
       # widget tests are the only automated check the app side has.
