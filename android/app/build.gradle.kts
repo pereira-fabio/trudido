@@ -1,8 +1,17 @@
+import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // Flutter plugin must be applied last
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
 }
 
 android {
@@ -14,10 +23,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
         isCoreLibraryDesugaringEnabled = true
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     defaultConfig {
@@ -52,7 +57,7 @@ android {
             // pointed at the upstream author's D:/keystores directory, which
             // exists on exactly one machine, so every other build silently
             // produced an unsigned artifact.
-            val keyProperties = java.util.Properties()
+            val keyProperties = Properties()
             val keyPropertiesFile = rootProject.file("key.properties")
             if (keyPropertiesFile.exists()) {
                 keyPropertiesFile.inputStream().use { keyProperties.load(it) }
