@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sync talks to a server the user runs themselves, normally addressed by IP
+  over plain HTTP. There is no certificate to validate and no hostname to pin:
+  nobody issues one for 192.168.x.x. Since targetSdk is 28 or above, Android
+  blocks cleartext by default, so it has to be permitted explicitly or the
+  connection fails before it is attempted.
+
+  What this costs, stated plainly: traffic between the app and the sync server
+  is readable by anything else on that network. Vault notes are encrypted on
+  the device before they are sent, so those stay unreadable either way, but
+  ordinary tasks and notes travel in the clear.
+
+  This permits network access; it does not introduce any. The app still talks
+  to nothing except the server address the user enters, and to nothing at all
+  until they enter one.
+
+  Putting HTTPS in front of the server with a certificate from a private CA
+  additionally needs <certificates src="user" /> among the trust anchors below,
+  since Android 7 stopped trusting user-installed CAs by default.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
