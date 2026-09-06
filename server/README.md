@@ -15,11 +15,31 @@ cd /opt/trudido
 docker compose up -d --build
 ```
 
-- **Sync API and Swagger docs** — `http://<server>:8000/docs`
+- **Sync API and Swagger docs** — `http://<server>:8001/docs`
 - **Browser app** — `http://<server>:8080`
 
-Then in the phone app: **Settings → Sync**, enter `http://<server>:8000` and the
-token, and press *Test connection*.
+### Ports
+
+The host ports are configurable, because a NAS running more than one of these
+stacks will collide — peakpace's backend also publishes `8000`. Put them in a
+`.env` file beside `docker-compose.yml`:
+
+```bash
+TRUDIDO_API_PORT=8001
+TRUDIDO_WEB_PORT=8080
+```
+
+Only the host side moves; the container still listens on `8000`, so
+`API_AUTH_TOKEN` and the URL you enter in the app are the only things that
+need to agree. To find what already holds a port:
+
+```bash
+ss -tlnp | grep :8000        # or: docker ps --format '{{.Names}}\t{{.Ports}}'
+```
+
+Then in the phone app: **Settings → Sync**, enter `http://<server>:8001` — the
+host port above, not the container's — and the token, then press
+*Test connection*.
 
 ## Configuration
 

@@ -2,8 +2,13 @@
 #
 #   docker compose up -d --build
 #
-# Sync API and Swagger docs   http://<server>:8000/docs
+# Sync API and Swagger docs   http://<server>:8001/docs
 # Browser app                 http://<server>:8080
+#
+# Host ports are overridable, because a NAS running more than one of these
+# stacks will collide -- peakpace's backend also publishes 8000. Put
+# TRUDIDO_API_PORT / TRUDIDO_WEB_PORT in a .env file beside this one to
+# change them. Only the host side moves; the container still listens on 8000.
 #
 # The phone app keeps working with this stack switched off; it is a sync peer,
 # not a source of truth.
@@ -34,7 +39,7 @@ services:
       - trudido_db:/db
       - /opt/trudido/data:/data
     ports:
-      - "8000:8000"
+      - "${TRUDIDO_API_PORT:-8001}:8000"
 
   # The browser build is not wired up yet, so this service sits behind a
   # profile and `docker compose up -d` brings up the backend alone. Delete the
@@ -49,7 +54,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
+      - "${TRUDIDO_WEB_PORT:-8080}:80"
 
 volumes:
   trudido_db:
