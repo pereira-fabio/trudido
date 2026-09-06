@@ -163,6 +163,20 @@ class SyncApiClient {
     return {for (final b in body['blobs'] as List) b['sha256'] as String};
   });
 
+  /// The manifest as sha256 -> original filename, for matching an attachment
+  /// a note refers to by name against what the server actually holds.
+  Future<Map<String, String>> blobManifestDetailed() => _guard(() async {
+    final response = await _http
+        .get(_uri('/blobs/manifest'), headers: _headers)
+        .timeout(timeout);
+    if (response.statusCode != 200) _fail(response);
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    return {
+      for (final blob in body['blobs'] as List)
+        blob['sha256'] as String: blob['filename'] as String,
+    };
+  });
+
   /// Attachments get a longer timeout than records: a video note over a home
   /// network can legitimately take minutes.
   Future<void> uploadBlob(

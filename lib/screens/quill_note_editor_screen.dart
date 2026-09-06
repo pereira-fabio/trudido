@@ -58,6 +58,7 @@ import '../models/note_history.dart';
 import '../services/storage_service.dart';
 import '../widgets/common/common.dart';
 import '../utils/note_colors.dart';
+import '../utils/media_ref.dart';
 
 /// Media type enum
 enum MediaType { photo, video }
@@ -1063,7 +1064,12 @@ class _QuillNoteEditorScreenState extends ConsumerState<QuillNoteEditorScreen> {
       }
 
       // Create a custom embed block with media data
-      final mediaData = jsonEncode({'type': type, 'path': savedFile.path});
+      // Stored portable: an absolute device path is meaningless on another
+      // device or in a browser. MediaRef.resolve turns it back into a path.
+      final mediaData = jsonEncode({
+        'type': type,
+        'path': MediaRef.toPortable(savedFile.path),
+      });
 
       if (kDebugMode) {
         debugPrint('Media data JSON: $mediaData');
@@ -1566,7 +1572,7 @@ class _QuillNoteEditorScreenState extends ConsumerState<QuillNoteEditorScreen> {
                     jsonDecode(customData['media'] as String)
                         as Map<String, dynamic>;
                 final filePath = mediaData['path'] as String;
-                _trackedMediaFiles.add(filePath);
+                _trackedMediaFiles.add(MediaRef.fileNameOf(filePath));
               }
             } catch (e) {
               if (kDebugMode) {
@@ -1580,7 +1586,7 @@ class _QuillNoteEditorScreenState extends ConsumerState<QuillNoteEditorScreen> {
               final mediaData =
                   jsonDecode(data['media'] as String) as Map<String, dynamic>;
               final filePath = mediaData['path'] as String;
-              _trackedMediaFiles.add(filePath);
+              _trackedMediaFiles.add(MediaRef.fileNameOf(filePath));
             } catch (e) {
               if (kDebugMode) {
                 debugPrint('Error parsing media during init: $e');
@@ -1620,7 +1626,7 @@ class _QuillNoteEditorScreenState extends ConsumerState<QuillNoteEditorScreen> {
                     jsonDecode(customData['media'] as String)
                         as Map<String, dynamic>;
                 final filePath = mediaData['path'] as String;
-                currentMediaFiles.add(filePath);
+                currentMediaFiles.add(MediaRef.fileNameOf(filePath));
               }
             } catch (e) {
               if (kDebugMode) {
@@ -1634,7 +1640,7 @@ class _QuillNoteEditorScreenState extends ConsumerState<QuillNoteEditorScreen> {
               final mediaData =
                   jsonDecode(data['media'] as String) as Map<String, dynamic>;
               final filePath = mediaData['path'] as String;
-              currentMediaFiles.add(filePath);
+              currentMediaFiles.add(MediaRef.fileNameOf(filePath));
             } catch (e) {
               if (kDebugMode) {
                 debugPrint('Error parsing media in tracker: $e');
@@ -1648,13 +1654,13 @@ class _QuillNoteEditorScreenState extends ConsumerState<QuillNoteEditorScreen> {
       final deletedFiles = _trackedMediaFiles.difference(currentMediaFiles);
 
       // Delete the files from filesystem
-      for (final filePath in deletedFiles) {
+      for (final fileName in deletedFiles) {
         try {
-          final file = File(filePath);
+          final file = File(MediaRef.resolve(fileName));
           if (file.existsSync()) {
             file.deleteSync();
             if (kDebugMode) {
-              debugPrint('Deleted removed media file: $filePath');
+              debugPrint('Deleted removed media file: $fileName');
             }
           }
         } catch (e) {

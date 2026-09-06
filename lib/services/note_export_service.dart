@@ -25,6 +25,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/note.dart';
 import 'package:path/path.dart' as path;
 import 'dart:convert';
+import '../utils/media_ref.dart';
 
 // Helper structure used while converting Quill ops to PDF blocks
 class _PdfLine {
@@ -227,7 +228,9 @@ class NoteExportService {
                   final mediaData =
                       jsonDecode(mediaJson) as Map<String, dynamic>;
                   final type = mediaData['type'] as String? ?? 'image';
-                  final pathStr = mediaData['path'] as String?;
+                  final rawPath = mediaData['path'] as String?;
+                  final pathStr =
+                      rawPath == null ? null : MediaRef.resolve(rawPath);
 
                   if (type == 'image' && pathStr != null) {
                     debugPrint('Attempting to load image from: $pathStr');

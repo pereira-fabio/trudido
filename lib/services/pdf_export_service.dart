@@ -24,6 +24,7 @@ import 'dart:io';
 import '../models/note.dart';
 import '../models/todo.dart';
 import '../services/storage_service.dart';
+import '../utils/media_ref.dart';
 
 /// Line accumulation helper for Quill-to-PDF conversion inside [PdfExportService].
 /// In Quill Delta, block attributes live on the "\n" op that terminates each
@@ -531,7 +532,9 @@ class PdfExportService {
             try {
               final mediaData = jsonDecode(mediaJson) as Map<String, dynamic>;
               final type = mediaData['type'] as String? ?? 'image';
-              final pathStr = mediaData['path'] as String?;
+              final rawPath = mediaData['path'] as String?;
+              final pathStr =
+                  rawPath == null ? null : MediaRef.resolve(rawPath);
               if (type == 'image' && pathStr != null) {
                 final file = File(pathStr);
                 if (await file.exists()) {

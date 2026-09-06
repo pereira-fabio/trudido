@@ -22,6 +22,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 import '../widgets/common/common.dart';
+import '../utils/media_ref.dart';
 
 /// Custom embed builder for rendering media (images, videos, audio) in Quill editor
 class MediaEmbedBuilder extends quill.EmbedBuilder {
@@ -51,7 +52,8 @@ class MediaEmbedBuilder extends quill.EmbedBuilder {
     }
 
     final mediaType = data['type'] as String;
-    final filePath = data['path'] as String;
+    // Resolved, not used raw: content may carry a path from another device.
+    final filePath = MediaRef.resolve(data['path'] as String);
 
     switch (mediaType) {
       case 'image':

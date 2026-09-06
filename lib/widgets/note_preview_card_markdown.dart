@@ -38,6 +38,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import '../widgets/common/common.dart';
 import '../theme/spacing_tokens.dart';
 import '../repositories/note_folder_repository.dart';
+import '../utils/media_ref.dart';
 
 /// A clean, scannable preview card with lightweight markdown rendering
 ///
@@ -148,7 +149,7 @@ class NotePreviewCard extends ConsumerWidget {
             try {
               final mediaData = jsonDecode(mediaJson) as Map<String, dynamic>;
               if (mediaData['type'] == 'image' && mediaData['path'] is String) {
-                return mediaData['path'] as String;
+                return MediaRef.resolve(mediaData['path'] as String);
               }
             } catch (_) {}
           }
@@ -448,7 +449,10 @@ class NotePreviewCard extends ConsumerWidget {
               try {
                 final mediaData = jsonDecode(mediaJson) as Map<String, dynamic>;
                 final mediaType = mediaData['type'] as String;
-                final mediaPath = mediaData['path'] as String?;
+                final rawMediaPath = mediaData['path'] as String?;
+                final mediaPath = rawMediaPath == null
+                    ? null
+                    : MediaRef.resolve(rawMediaPath);
 
                 Widget thumbnail;
                 if (mediaType == 'image' && mediaPath != null) {

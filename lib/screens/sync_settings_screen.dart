@@ -143,7 +143,8 @@ class _SyncSettingsScreenState extends ConsumerState<SyncSettingsScreen> {
     _snack(
       result.ok
           ? 'Synced. ${result.pulled} in, ${result.pushed} out'
-              '${result.conflicts > 0 ? ', ${result.conflicts} conflicts resolved' : ''}.'
+              '${result.conflicts > 0 ? ', ${result.conflicts} conflicts resolved' : ''}'
+              '${result.attachmentSummary}.'
           : result.error ?? 'Sync failed.',
     );
   }
@@ -316,7 +317,7 @@ class _SyncSettingsScreenState extends ConsumerState<SyncSettingsScreen> {
               title: const Text('Sync attachments'),
               subtitle: const Text(
                 'Images, audio and video in notes. Off saves bandwidth; '
-                'embeds will not open on other devices.',
+                'embeds will show as broken on other devices.',
               ),
             ),
 
@@ -392,6 +393,7 @@ class _SyncSettingsScreenState extends ConsumerState<SyncSettingsScreen> {
         SyncPhase.connecting => 'Connecting…',
         SyncPhase.pulling => 'Receiving changes…',
         SyncPhase.pushing => 'Sending changes…',
+        SyncPhase.media => 'Transferring attachments…',
         _ => 'Syncing…',
       };
     } else if (error != null) {
@@ -420,10 +422,14 @@ class _SyncSettingsScreenState extends ConsumerState<SyncSettingsScreen> {
         children: [
           if (error != null)
             Text(error, style: TextStyle(color: theme.colorScheme.error))
-          else if (_status.pulled > 0 || _status.pushed > 0)
+          else if (_status.pulled > 0 ||
+              _status.pushed > 0 ||
+              _status.mediaUploaded > 0 ||
+              _status.mediaDownloaded > 0)
             Text(
               '${_status.pulled} received, ${_status.pushed} sent'
-              '${_status.conflicts > 0 ? ', ${_status.conflicts} conflicts resolved' : ''}',
+              '${_status.conflicts > 0 ? ', ${_status.conflicts} conflicts resolved' : ''}'
+              '${_status.mediaUploaded > 0 || _status.mediaDownloaded > 0 ? ', ${_status.mediaUploaded + _status.mediaDownloaded} attachments' : ''}',
             ),
           if (pending > 0)
             Text('$pending change${pending == 1 ? '' : 's'} waiting to send'),

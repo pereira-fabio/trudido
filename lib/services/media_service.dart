@@ -256,10 +256,16 @@ class MediaService {
     _audioRecorder.dispose();
   }
 
+  /// Where attachments are kept. Resolved once at startup and handed to
+  /// [MediaRef], which must stay free of path_provider so it also works on web.
+  static Future<String> mediaDirectoryPath() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    return path.join(appDir.path, 'media');
+  }
+
   /// Copy file to app's documents directory with a proper name
   Future<File> saveMediaToAppDirectory(File sourceFile, String prefix) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory(path.join(appDir.path, 'media'));
+    final mediaDir = Directory(await mediaDirectoryPath());
     if (!mediaDir.existsSync()) {
       mediaDir.createSync(recursive: true);
     }

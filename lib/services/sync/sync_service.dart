@@ -19,12 +19,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'sync_api_client.dart';
+import 'media_sync.dart';
 import 'sync_config.dart';
 import 'sync_queue.dart';
 import 'sync_repository_bridge.dart';
 import 'sync_types.dart';
 
-enum SyncPhase { idle, connecting, pulling, pushing, done, failed }
+enum SyncPhase { idle, connecting, pulling, pushing, media, done, failed }
 
 @immutable
 class SyncStatus {
@@ -32,6 +33,8 @@ class SyncStatus {
   final int pulled;
   final int pushed;
   final int conflicts;
+  final int mediaUploaded;
+  final int mediaDownloaded;
   final String? error;
   final DateTime? lastSyncAt;
   final int pending;
@@ -41,6 +44,8 @@ class SyncStatus {
     this.pulled = 0,
     this.pushed = 0,
     this.conflicts = 0,
+    this.mediaUploaded = 0,
+    this.mediaDownloaded = 0,
     this.error,
     this.lastSyncAt,
     this.pending = 0,
@@ -49,13 +54,16 @@ class SyncStatus {
   bool get isRunning =>
       phase == SyncPhase.connecting ||
       phase == SyncPhase.pulling ||
-      phase == SyncPhase.pushing;
+      phase == SyncPhase.pushing ||
+      phase == SyncPhase.media;
 
   SyncStatus copyWith({
     SyncPhase? phase,
     int? pulled,
     int? pushed,
     int? conflicts,
+    int? mediaUploaded,
+    int? mediaDownloaded,
     String? error,
     bool clearError = false,
     DateTime? lastSyncAt,
@@ -65,6 +73,8 @@ class SyncStatus {
     pulled: pulled ?? this.pulled,
     pushed: pushed ?? this.pushed,
     conflicts: conflicts ?? this.conflicts,
+    mediaUploaded: mediaUploaded ?? this.mediaUploaded,
+    mediaDownloaded: mediaDownloaded ?? this.mediaDownloaded,
     error: clearError ? null : (error ?? this.error),
     lastSyncAt: lastSyncAt ?? this.lastSyncAt,
     pending: pending ?? this.pending,
@@ -82,6 +92,7 @@ class SyncService {
   static final SyncService instance = SyncService._();
 
   final SyncRepositoryBridge _bridge = SyncRepositoryBridge();
+  final MediaSync _media = const MediaSync();
 
   final _statusController = StreamController<SyncStatus>.broadcast();
   Stream<SyncStatus> get statusStream => _statusController.stream;
@@ -291,6 +302,14 @@ class SyncService {
         conflicts += drain.superseded;
       }
 
+      var mediaResult = const MediaSyncResult();
+      if (SyncConfig.syncMedia) {
+        // After records, so a note that arrived this pass has its attachment
+        // fetched in the same run rather than the next one.
+        _emit(_status.copyWith(phase: SyncPhase.media));
+        mediaResult = await _media.run(client);
+      }
+
       final now = DateTime.now();
       await SyncConfig.setLastSyncAt(now);
       await SyncConfig.setLastError(null);
@@ -300,6 +319,8 @@ class SyncService {
           pulled: pulled,
           pushed: pushed,
           conflicts: conflicts,
+          mediaUploaded: mediaResult.uploaded,
+          mediaDownloaded: mediaResult.downloaded,
           lastSyncAt: now,
           pending: SyncQueue.length,
           clearError: true,
@@ -310,6 +331,8 @@ class SyncService {
         pulled: pulled,
         pushed: pushed,
         conflicts: conflicts,
+        mediaUploaded: mediaResult.uploaded,
+        mediaDownloaded: mediaResult.downloaded,
       );
     } on SyncApiException catch (e) {
       await SyncConfig.setLastError(e.message);
@@ -429,6 +452,8 @@ class SyncResult {
   final int pulled;
   final int pushed;
   final int conflicts;
+  final int mediaUploaded;
+  final int mediaDownloaded;
   final String? error;
 
   const SyncResult({
@@ -436,6 +461,18 @@ class SyncResult {
     this.pulled = 0,
     this.pushed = 0,
     this.conflicts = 0,
+    this.mediaUploaded = 0,
+    this.mediaDownloaded = 0,
     this.error,
   });
+
+  /// For the snackbar after a manual sync.
+  String get attachmentSummary {
+    if (mediaUploaded == 0 && mediaDownloaded == 0) return '';
+    final parts = <String>[
+      if (mediaUploaded > 0) '$mediaUploaded up',
+      if (mediaDownloaded > 0) '$mediaDownloaded down',
+    ];
+    return ', attachments ${parts.join(" / ")}';
+  }
 }

@@ -36,6 +36,8 @@ import 'services/widget_service.dart';
 import 'services/notification_service.dart';
 import 'services/notification_action_sync.dart';
 import 'services/sync/sync_service.dart';
+import 'services/media_service.dart';
+import 'utils/media_ref.dart';
 import 'providers/app_providers.dart';
 import 'providers/filter_providers.dart';
 import 'services/folder_provider.dart';
@@ -524,6 +526,14 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap>
         });
         // Update widget with current tasks after storage is ready
         _updateWidgetData();
+
+        // Attachment paths resolve through MediaRef, so it needs the media
+        // directory before any note renders an embed.
+        try {
+          MediaRef.configure(await MediaService.mediaDirectoryPath());
+        } catch (e) {
+          debugPrint('[Bootstrap] Media directory unavailable: $e');
+        }
 
         // Self-hosted sync. init() only reads settings and opens the outbox;
         // it never contacts the network, so a server that is down or absent
