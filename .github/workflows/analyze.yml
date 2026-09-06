@@ -37,6 +37,12 @@ jobs:
       - name: Test
         run: flutter test
 
+      # The web build is the only check that the browser target actually
+      # compiles: dart:io is legal on Android and fatal here, so nothing else
+      # catches a stray import. Roughly two minutes, and no secrets needed.
+      - name: Build web
+        run: flutter build web --release
+
   server:
     runs-on: ubuntu-latest
     steps:

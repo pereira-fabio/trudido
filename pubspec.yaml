@@ -21,9 +21,10 @@ version: 1.3.5+26 # Release tag for v1.3.5 (build 26)
 environment:
   sdk: ^3.8.1
 
-# Platform configuration - Android only
+# Android is the primary target; web is the self-hosted browser build.
 platforms:
   android:
+  web:
 
 # Build metadata (helpful for reproducible builds and support requests)
 build_info:
