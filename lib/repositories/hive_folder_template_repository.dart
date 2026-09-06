@@ -18,6 +18,8 @@ import 'package:hive/hive.dart';
 import '../models/folder_template.dart';
 import '../repositories/folder_template_repository.dart';
 import '../services/storage_service.dart';
+import '../services/sync/sync_queue.dart';
+import '../services/sync/sync_types.dart';
 
 /// Concrete implementation of FolderTemplateRepository using Hive
 class HiveFolderTemplateRepository implements FolderTemplateRepository {
@@ -58,6 +60,11 @@ class HiveFolderTemplateRepository implements FolderTemplateRepository {
   Future<void> createTemplate(FolderTemplate template) async {
     if (_templatesBox == null) await init();
     await _templatesBox!.put(template.id, template);
+    SyncQueue.record(
+      SyncCollection.templates,
+      template.id,
+      updatedAt: template.updatedAt,
+    );
   }
 
   @override
@@ -65,6 +72,11 @@ class HiveFolderTemplateRepository implements FolderTemplateRepository {
     if (_templatesBox == null) await init();
     final updatedTemplate = template.copyWith(updatedAt: DateTime.now());
     await _templatesBox!.put(template.id, updatedTemplate);
+    SyncQueue.record(
+      SyncCollection.templates,
+      template.id,
+      updatedAt: updatedTemplate.updatedAt,
+    );
   }
 
   @override
@@ -75,6 +87,7 @@ class HiveFolderTemplateRepository implements FolderTemplateRepository {
     // Only allow deletion of custom templates
     if (template != null && !template.isBuiltIn) {
       await _templatesBox!.delete(id);
+      SyncQueue.record(SyncCollection.templates, id, op: SyncOp.delete);
       return true;
     }
     return false;

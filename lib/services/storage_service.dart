@@ -30,6 +30,8 @@ import '../models/event.dart';
 import '../repositories/hive_folder_repository.dart';
 import '../repositories/hive_folder_template_repository.dart';
 import '../utils/encryption_helper.dart';
+import 'sync/sync_queue.dart';
+import 'sync/sync_types.dart';
 
 class StorageService {
   static const String _todosBoxName = 'todos';
@@ -486,7 +488,13 @@ Type **/** to open the insert menu:
     try {
       _todosLazyBox ??= await Hive.openLazyBox<Todo>(_todosBoxName);
       if (_todosLazyBox != null) {
+        todo.updatedAt = DateTime.now();
         await _todosLazyBox!.put(todo.id, todo);
+        SyncQueue.record(
+          SyncCollection.todos,
+          todo.id,
+          updatedAt: todo.updatedAt,
+        );
         return;
       }
       throw Exception('Todos lazy box is not available');
@@ -505,7 +513,15 @@ Type **/** to open the insert menu:
         if (todo != null) {
           todo.isDeleted = true;
           todo.deletedAt = DateTime.now();
+          todo.updatedAt = todo.deletedAt;
           await _todosLazyBox!.put(id, todo);
+          // A binned task is still a record the other device must show in its
+          // own bin, so this is an upsert carrying isDeleted, not a tombstone.
+          SyncQueue.record(
+            SyncCollection.todos,
+            id,
+            updatedAt: todo.updatedAt,
+          );
         }
         return;
       }
@@ -520,6 +536,7 @@ Type **/** to open the insert menu:
     await waitTodosReady();
     if (_todosLazyBox != null) {
       await _todosLazyBox!.delete(id);
+      SyncQueue.record(SyncCollection.todos, id, op: SyncOp.delete);
     }
   }
 
@@ -529,7 +546,14 @@ Type **/** to open the insert menu:
       final todo = await _todosLazyBox!.get(id);
       if (todo != null) {
         todo.isDeleted = false;
+        todo.deletedAt = null;
+        todo.updatedAt = DateTime.now();
         await _todosLazyBox!.put(id, todo);
+        SyncQueue.record(
+          SyncCollection.todos,
+          id,
+          updatedAt: todo.updatedAt,
+        );
       }
     }
   }
@@ -539,7 +563,13 @@ Type **/** to open the insert menu:
     try {
       _todosLazyBox ??= await Hive.openLazyBox<Todo>(_todosBoxName);
       if (_todosLazyBox != null) {
+        todo.updatedAt = DateTime.now();
         await _todosLazyBox!.put(todo.id, todo);
+        SyncQueue.record(
+          SyncCollection.todos,
+          todo.id,
+          updatedAt: todo.updatedAt,
+        );
         return;
       }
       throw Exception('Todos lazy box is not available');
@@ -628,7 +658,13 @@ Type **/** to open the insert menu:
     try {
       _eventsLazyBox ??= await Hive.openLazyBox<Event>(_eventsBoxName);
       if (_eventsLazyBox != null) {
+        event.updatedAt = DateTime.now();
         await _eventsLazyBox!.put(event.id, event);
+        SyncQueue.record(
+          SyncCollection.events,
+          event.id,
+          updatedAt: event.updatedAt,
+        );
         return;
       }
       throw Exception('Events lazy box is not available');
@@ -647,7 +683,13 @@ Type **/** to open the insert menu:
         if (event != null) {
           event.isDeleted = true;
           event.deletedAt = DateTime.now();
+          event.updatedAt = event.deletedAt;
           await _eventsLazyBox!.put(id, event);
+          SyncQueue.record(
+            SyncCollection.events,
+            id,
+            updatedAt: event.updatedAt,
+          );
         }
         return;
       }
@@ -662,6 +704,7 @@ Type **/** to open the insert menu:
     await waitEventsReady();
     if (_eventsLazyBox != null) {
       await _eventsLazyBox!.delete(id);
+      SyncQueue.record(SyncCollection.events, id, op: SyncOp.delete);
     }
   }
 
@@ -671,7 +714,14 @@ Type **/** to open the insert menu:
       final event = await _eventsLazyBox!.get(id);
       if (event != null) {
         event.isDeleted = false;
+        event.deletedAt = null;
+        event.updatedAt = DateTime.now();
         await _eventsLazyBox!.put(id, event);
+        SyncQueue.record(
+          SyncCollection.events,
+          id,
+          updatedAt: event.updatedAt,
+        );
       }
     }
   }
@@ -681,7 +731,13 @@ Type **/** to open the insert menu:
     try {
       _eventsLazyBox ??= await Hive.openLazyBox<Event>(_eventsBoxName);
       if (_eventsLazyBox != null) {
+        event.updatedAt = DateTime.now();
         await _eventsLazyBox!.put(event.id, event);
+        SyncQueue.record(
+          SyncCollection.events,
+          event.id,
+          updatedAt: event.updatedAt,
+        );
         return;
       }
       throw Exception('Events lazy box is not available');
@@ -750,6 +806,13 @@ Type **/** to open the insert menu:
       throw Exception('Notes storage not initialized. Cannot save note.');
     }
     await _notesBox!.put(note.id, note);
+    // Note.updatedAt is maintained by the editors and surfaced as "last
+    // edited", so it is read here rather than stamped over.
+    SyncQueue.record(
+      SyncCollection.notes,
+      note.id,
+      updatedAt: note.updatedAt,
+    );
   }
 
   static Future<void> deleteNote(String id) async {
@@ -759,12 +822,18 @@ Type **/** to open the insert menu:
       note.isDeleted = true;
       note.deletedAt = DateTime.now();
       await _notesBox!.put(id, note);
+      SyncQueue.record(
+        SyncCollection.notes,
+        id,
+        updatedAt: note.deletedAt,
+      );
     }
   }
 
   static Future<void> permanentlyDeleteNote(String id) async {
     if (_notesBox == null) return;
     await _notesBox!.delete(id);
+    SyncQueue.record(SyncCollection.notes, id, op: SyncOp.delete);
   }
 
   /// Purges bin items older than [daysInBin] days from both notes and todos.
@@ -825,7 +894,14 @@ Type **/** to open the insert menu:
     final note = _notesBox!.get(id);
     if (note != null) {
       note.isDeleted = false;
+      note.deletedAt = null;
+      note.updatedAt = DateTime.now();
       await _notesBox!.put(id, note);
+      SyncQueue.record(
+        SyncCollection.notes,
+        id,
+        updatedAt: note.updatedAt,
+      );
     }
   }
 
@@ -852,12 +928,20 @@ Type **/** to open the insert menu:
   // Note folders operations
   static Future<void> saveNoteFolder(NoteFolder folder) async {
     if (_noteFoldersBox == null) return;
+    folder.updatedAt = DateTime.now();
     await _noteFoldersBox!.put(folder.id, folder);
+    SyncQueue.record(
+      SyncCollection.noteFolders,
+      folder.id,
+      updatedAt: folder.updatedAt,
+    );
   }
 
   static Future<void> deleteNoteFolder(String id) async {
     if (_noteFoldersBox == null) return;
     await _noteFoldersBox!.delete(id);
+    // Note folders have no bin, so removal really is a tombstone.
+    SyncQueue.record(SyncCollection.noteFolders, id, op: SyncOp.delete);
   }
 
   static List<NoteFolder> getAllNoteFolders() {
@@ -1688,6 +1772,7 @@ Type **/** to open the insert menu:
     final themes = _getCustomThemesMap();
     themes[id] = jsonString;
     await _prefs!.setString(_customThemesKey, jsonEncode(themes));
+    SyncQueue.record(SyncCollection.themes, id);
   }
 
   /// Delete a custom theme by id
@@ -1696,6 +1781,7 @@ Type **/** to open the insert menu:
     final themes = _getCustomThemesMap();
     themes.remove(id);
     await _prefs!.setString(_customThemesKey, jsonEncode(themes));
+    SyncQueue.record(SyncCollection.themes, id, op: SyncOp.delete);
     // Clear active theme if it was the deleted one
     if (getActiveCustomThemeId() == id) {
       await clearActiveCustomTheme();

@@ -41,13 +41,14 @@ class EventAdapter extends TypeAdapter<Event> {
       color: fields[21] as int?,
       uid: fields[22] == null ? '' : fields[22] as String,
       location: fields[23] as String?,
+      updatedAt: fields[24] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Event obj) {
     writer
-      ..writeByte(24)
+      ..writeByte(25)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -95,7 +96,9 @@ class EventAdapter extends TypeAdapter<Event> {
       ..writeByte(22)
       ..write(obj.uid)
       ..writeByte(23)
-      ..write(obj.location);
+      ..write(obj.location)
+      ..writeByte(24)
+      ..write(obj.updatedAt);
   }
 
   @override

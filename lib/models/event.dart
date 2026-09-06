@@ -96,6 +96,14 @@ class Event extends HiveObject {
   @HiveField(23)
   String? location;
 
+  /// Last local modification, stamped by StorageService on every write.
+  /// Null on records written before sync existed; see [effectiveUpdatedAt].
+  @HiveField(24)
+  DateTime? updatedAt;
+
+  /// The timestamp sync compares. Never null.
+  DateTime get effectiveUpdatedAt => updatedAt ?? createdAt;
+
   Event({
     String? id,
     required this.text,
@@ -121,6 +129,7 @@ class Event extends HiveObject {
     this.color,
     this.uid = '',
     this.location,
+    this.updatedAt,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now(),
        tags = tags ?? [],
@@ -151,6 +160,7 @@ class Event extends HiveObject {
     int? color,
     String? uid,
     String? location,
+    DateTime? updatedAt,
   }) {
     return Event(
       id: id ?? this.id,
@@ -179,6 +189,7 @@ class Event extends HiveObject {
       color: color ?? this.color,
       uid: uid ?? this.uid,
       location: location ?? this.location,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -208,6 +219,7 @@ class Event extends HiveObject {
       'color': color,
       'uid': uid,
       'location': location,
+      'updatedAt': effectiveUpdatedAt.toIso8601String(),
     };
   }
 
@@ -247,6 +259,9 @@ class Event extends HiveObject {
       color: json['color'],
       uid: json['uid'] ?? '',
       location: json['location'],
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
     );
   }
 

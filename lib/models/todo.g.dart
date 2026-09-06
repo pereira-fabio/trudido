@@ -39,13 +39,14 @@ class TodoAdapter extends TypeAdapter<Todo> {
       isDeleted: fields[19] == null ? false : fields[19] as bool,
       durationMinutes: fields[21] as int?,
       deletedAt: fields[22] as DateTime?,
+      updatedAt: fields[23] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Todo obj) {
     writer
-      ..writeByte(22)
+      ..writeByte(23)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -89,7 +90,9 @@ class TodoAdapter extends TypeAdapter<Todo> {
       ..writeByte(21)
       ..write(obj.durationMinutes)
       ..writeByte(22)
-      ..write(obj.deletedAt);
+      ..write(obj.deletedAt)
+      ..writeByte(23)
+      ..write(obj.updatedAt);
   }
 
   @override

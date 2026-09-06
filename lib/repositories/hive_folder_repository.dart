@@ -19,6 +19,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/folder.dart';
 import '../repositories/folder_repository.dart';
 import '../services/storage_service.dart';
+import '../services/sync/sync_queue.dart';
+import '../services/sync/sync_types.dart';
 
 /// Concrete implementation of FolderRepository using Hive for local storage
 class HiveFolderRepository implements FolderRepository {
@@ -66,6 +68,11 @@ class HiveFolderRepository implements FolderRepository {
   Future<void> createFolder(Folder folder) async {
     if (_foldersBox == null) await init();
     await _foldersBox!.put(folder.id, folder);
+    SyncQueue.record(
+      SyncCollection.folders,
+      folder.id,
+      updatedAt: folder.updatedAt,
+    );
   }
 
   @override
@@ -81,6 +88,11 @@ class HiveFolderRepository implements FolderRepository {
     }
     final updatedFolder = folder.copyWith(updatedAt: DateTime.now());
     await _foldersBox!.put(folder.id, updatedFolder);
+    SyncQueue.record(
+      SyncCollection.folders,
+      folder.id,
+      updatedAt: updatedFolder.updatedAt,
+    );
   }
 
   @override
@@ -104,6 +116,7 @@ class HiveFolderRepository implements FolderRepository {
       }
     }
     await _foldersBox!.delete(id);
+    SyncQueue.record(SyncCollection.folders, id, op: SyncOp.delete);
   }
 
   @override
@@ -155,6 +168,11 @@ class HiveFolderRepository implements FolderRepository {
           updatedAt: DateTime.now(),
         );
         await _foldersBox!.put(folder.id, updatedFolder);
+        SyncQueue.record(
+          SyncCollection.folders,
+          folder.id,
+          updatedAt: updatedFolder.updatedAt,
+        );
       }
     }
   }

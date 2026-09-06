@@ -87,6 +87,16 @@ class Todo extends HiveObject {
   @HiveField(22)
   DateTime? deletedAt;
 
+  /// Last local modification, stamped by StorageService on every write.
+  /// Null on records written before sync existed; treat those as [createdAt]
+  /// via [effectiveUpdatedAt] rather than as "never modified".
+  @HiveField(23)
+  DateTime? updatedAt;
+
+  /// The timestamp sync compares. Never null, so conflict resolution does not
+  /// have to special-case pre-sync records.
+  DateTime get effectiveUpdatedAt => updatedAt ?? createdAt;
+
   Todo({
     String? id,
     required this.text,
@@ -110,6 +120,7 @@ class Todo extends HiveObject {
     this.isDeleted = false,
     this.durationMinutes,
     this.deletedAt,
+    this.updatedAt,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now(),
        tags = tags ?? [],
@@ -139,6 +150,7 @@ class Todo extends HiveObject {
     bool? isDeleted,
     int? durationMinutes,
     DateTime? deletedAt,
+    DateTime? updatedAt,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -165,6 +177,7 @@ class Todo extends HiveObject {
       isDeleted: isDeleted ?? this.isDeleted,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       deletedAt: deletedAt ?? this.deletedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -192,6 +205,8 @@ class Todo extends HiveObject {
       'sourceCalendarName': sourceCalendarName,
       'isDeleted': isDeleted,
       'durationMinutes': durationMinutes,
+      'deletedAt': deletedAt?.toIso8601String(),
+      'updatedAt': effectiveUpdatedAt.toIso8601String(),
     };
   }
 
@@ -228,6 +243,12 @@ class Todo extends HiveObject {
       sourceCalendarName: json['sourceCalendarName'],
       isDeleted: json['isDeleted'] ?? false,
       durationMinutes: json['durationMinutes'],
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.parse(json['deletedAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
     );
   }
 
