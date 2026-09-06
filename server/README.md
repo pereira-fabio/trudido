@@ -99,6 +99,56 @@ is refused instead of being served back to every device.
 | `PUT /api/v1/blobs/{sha256}` | Upload an attachment. Idempotent. |
 | `GET /api/v1/blobs/{sha256}` | Download an attachment. |
 
+## Seeing what is stored
+
+The API returns opaque documents, which is right for the protocol and useless
+for answering "did my notes actually arrive". `inspect_data.py` prints them:
+
+```bash
+# From anywhere that can reach the server
+python3 server/backend/inspect_data.py --url http://<server>:8001 --token SECRET
+
+# Or on the server itself
+docker exec trudido-backend python /app/inspect_data.py --url http://localhost:8000 --token SECRET
+```
+
+```
+Server   http://192.168.1.10:8001
+Revision 47
+
+notes  (12)
+-----------
+  2026-09-06 12:00  Groceries
+  ...
+
+todos  (31)
+-----------
+  2026-09-06 11:00  Call the plumber about the boiler
+```
+
+`--collection notes` narrows it, `--search plumber` filters, `--full` prints
+whole payloads, `--deleted` includes the bin. It only reads.
+
+A quick count without the listing:
+
+```bash
+curl -H "X-Trudido-Token: SECRET" http://<server>:8001/api/v1/sync/status
+```
+
+### Where the bytes actually are
+
+| | |
+| :-- | :-- |
+| Records | SQLite at `/db/trudido.db` inside the container, on the `trudido_db` volume |
+| Attachments | `/data/blobs/<first two hex>/<sha256>` — ordinary files, on the NAS share |
+
+The attachments are content-addressed, so they have hashes for names and no
+extensions. That is deliberate: the same photo in three notes is stored once.
+`inspect_data.py` prints the original filename alongside each hash.
+
+The database is not meant to be browsed by hand, and doing so while the server
+is running risks lock contention. Use the script.
+
 ## Development
 
 ```bash
