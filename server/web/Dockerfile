@@ -3,9 +3,11 @@
 # Built from the repository root, because the Flutter sources are there:
 #   docker compose build web
 #
-# The version floor comes from pubspec.lock; see the Analyze workflow, which
-# pins the same one.
-FROM ghcr.io/cirruslabs/flutter:3.47.2 AS build
+# 3.44.0 is the newest tag this image publishes, and it is exactly the floor
+# pubspec.lock requires (flutter >=3.44.0, dart >=3.12.0), so it satisfies the
+# dependency set. CI builds on 3.47.2; both clear the floor, and if they ever
+# disagree it is CI that is authoritative -- check its Build web step first.
+FROM ghcr.io/cirruslabs/flutter:3.44.0 AS build
 
 WORKDIR /app
 
