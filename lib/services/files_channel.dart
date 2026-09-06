@@ -15,11 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../services/storage_service.dart';
 import '../utils/encryption_helper.dart';
+import '../platform/app_platform.dart';
 
 /// FilesChannel bridges Flutter and native (Android) import/export using SAF.
 /// On Android, it uses MethodChannel('app.files') to trigger native pickers.
@@ -63,7 +63,7 @@ class FilesChannel {
 
   Future<void> ensureInitialized() async {
     if (_initialized) return;
-    if (!Platform.isAndroid) {
+    if (!AppPlatform.isAndroid) {
       _initialized = true;
       return;
     }
@@ -152,7 +152,7 @@ class FilesChannel {
   /// Starts the export process with optional password protection
   /// If [password] is provided, the backup will be encrypted
   Future<void> startExport({String? password}) async {
-    if (!Platform.isAndroid) return;
+    if (!AppPlatform.isAndroid) return;
     try {
       // Keep call to ensureInitialized in case caller forgot
       await ensureInitialized();
@@ -178,7 +178,7 @@ class FilesChannel {
   }
 
   Future<void> startImport() async {
-    if (!Platform.isAndroid) return;
+    if (!AppPlatform.isAndroid) return;
     try {
       await ensureInitialized();
       await _ch.invokeMethod('startImport');
@@ -190,7 +190,7 @@ class FilesChannel {
   /// Start markdown export via SAF (for restricted storage like Nextcloud)
   /// [notes] is a list of maps with 'filename' and 'content' keys
   Future<bool> startMarkdownExport(List<Map<String, String>> notes) async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
     try {
       await ensureInitialized();
       final result = await _ch.invokeMethod('startMarkdownExport', notes);

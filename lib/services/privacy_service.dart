@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
+import '../platform/app_platform.dart';
 
 /// Service for managing privacy settings like blackout in recents view
 class PrivacyService {
@@ -24,7 +24,7 @@ class PrivacyService {
   /// Enables or disables the black overlay that hides app content
   /// in the Android recents view
   Future<void> setSecureFlag(bool secure) async {
-    if (!Platform.isAndroid) return;
+    if (!AppPlatform.isAndroid) return;
 
     try {
       await _channel.invokeMethod('setSecureFlag', {'secure': secure});

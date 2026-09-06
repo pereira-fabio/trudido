@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import '../platform/app_platform.dart';
 
 /// Unified wrapper for system settings related to precise alarms & battery optimization.
 /// Uses the native MethodChannel 'app.perms' exposed in MainActivity.
@@ -56,7 +56,7 @@ class SystemSettingsService {
   }
 
   Future<void> _probeReadiness() async {
-    if (!Platform.isAndroid) {
+    if (!AppPlatform.isAndroid) {
       _ready = true;
       return;
     }
@@ -121,7 +121,7 @@ class SystemSettingsService {
   }
 
   Future<bool> canScheduleExactAlarms() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       final r = await _invoke<bool>('canScheduleExactAlarms');
       return r ?? true; // fail-open to avoid blocking user flows needlessly
@@ -134,7 +134,7 @@ class SystemSettingsService {
   }
 
   Future<void> openExactAlarmSettings() async {
-    if (!Platform.isAndroid) return;
+    if (!AppPlatform.isAndroid) return;
     try {
       await _invoke('openExactAlarmSettings');
     } catch (e) {
@@ -143,7 +143,7 @@ class SystemSettingsService {
   }
 
   Future<bool> isIgnoringBatteryOptimizations() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       final r = await _invoke<bool>('isIgnoringBatteryOptimizations');
       return r ?? true;
@@ -156,7 +156,7 @@ class SystemSettingsService {
   }
 
   Future<void> requestIgnoreBatteryOptimizations() async {
-    if (!Platform.isAndroid) return;
+    if (!AppPlatform.isAndroid) return;
     try {
       await _invoke('requestIgnoreBatteryOptimizations');
     } catch (e) {
@@ -169,7 +169,7 @@ class SystemSettingsService {
   /// DEBUG ONLY: schedules a short exact alarm (AlarmClock) to force system to list app under
   /// Alarms & reminders. No-op in release mode to avoid unintended behavior.
   Future<bool> scheduleDebugExactAlarm() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
     assert(() {
       debugPrint('[SystemSettingsService] scheduling debug exact alarm');
       return true;

@@ -22,6 +22,7 @@ import 'package:file_picker/file_picker.dart';
 import '../models/note.dart';
 import '../services/storage_service.dart';
 import '../services/files_channel.dart';
+import '../platform/app_platform.dart';
 
 /// Service for exporting and importing notes as individual markdown files
 class MarkdownExportService {
@@ -77,7 +78,7 @@ class MarkdownExportService {
       }
 
       // If direct approach failed, try SAF fallback on Android
-      if (needsSafFallback && Platform.isAndroid) {
+      if (needsSafFallback && AppPlatform.isAndroid) {
         debugPrint(
           '[MarkdownExport] Attempting SAF fallback for restricted storage...',
         );
@@ -218,7 +219,7 @@ class MarkdownExportService {
       debugPrint('[MarkdownImport] Starting notes import...');
 
       // Different approach for mobile vs desktop
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (AppPlatform.isAndroid || AppPlatform.isIOS) {
         return _importFromMobileFilePicker();
       } else {
         return _importFromDesktopDirectory();

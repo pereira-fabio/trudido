@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/permissions_channel.dart';
@@ -24,6 +23,7 @@ import '../services/files_channel.dart';
 
 import '../providers/app_providers.dart';
 import '../widgets/common/common.dart';
+import '../platform/app_platform.dart';
 
 /// Single consolidated settings page using AlarmSettingsWatcher (Riverpod) and unified dialogs.
 class UnifiedSettingsPage extends ConsumerStatefulWidget {
@@ -352,7 +352,7 @@ class _UnifiedSettingsPageState extends ConsumerState<UnifiedSettingsPage>
 
 // Async notifications status provider (simple FutureProvider wrapper) so UI rebuilds after invalidation.
 final _notificationsStatusProvider = FutureProvider<bool>((ref) async {
-  if (!Platform.isAndroid) return true;
+  if (!AppPlatform.isAndroid) return true;
   return PermissionsChannel.instance.areNotificationsEnabled();
 });
 

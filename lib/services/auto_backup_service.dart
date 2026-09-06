@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'storage_service.dart';
+import '../platform/app_platform.dart';
 
 /// Represents an automatic backup file
 class AutoBackupFile {
@@ -80,7 +81,7 @@ class AutoBackupService {
     int intervalHours = 24,
     bool requiresCharging = false,
   }) async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('scheduleAutoBackup', {
@@ -95,7 +96,7 @@ class AutoBackupService {
   }
 
   Future<bool> cancelAutoBackup() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('cancelAutoBackup');
@@ -107,7 +108,7 @@ class AutoBackupService {
   }
 
   Future<bool> isAutoBackupScheduled() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('isAutoBackupScheduled');
@@ -119,7 +120,7 @@ class AutoBackupService {
   }
 
   Future<bool> openBackupFolder() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('openBackupFolder');
@@ -131,7 +132,7 @@ class AutoBackupService {
   }
 
   Future<bool> chooseBackupFolder() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('chooseBackupFolder');
@@ -143,7 +144,7 @@ class AutoBackupService {
   }
 
   Future<String?> getCustomBackupFolder() async {
-    if (!Platform.isAndroid) return null;
+    if (!AppPlatform.isAndroid) return null;
 
     try {
       final result = await _channel.invokeMethod('getCustomBackupFolder');
@@ -155,7 +156,7 @@ class AutoBackupService {
   }
 
   Future<bool> clearCustomBackupFolder() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('clearCustomBackupFolder');
@@ -169,7 +170,7 @@ class AutoBackupService {
   }
 
   Future<List<AutoBackupFile>> listAutoBackups() async {
-    if (!Platform.isAndroid) return [];
+    if (!AppPlatform.isAndroid) return [];
 
     try {
       final result = await _channel.invokeMethod('listAutoBackups') as List?;
@@ -186,7 +187,7 @@ class AutoBackupService {
   }
 
   Future<bool> importAutoBackup(String filename) async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       final result = await _channel.invokeMethod('importAutoBackup', filename);
@@ -233,7 +234,7 @@ class AutoBackupService {
   /// Cache backup data to a file that AutoBackupWorker can read
   /// This should be called periodically when the app is active
   Future<bool> cacheBackupData() async {
-    if (!Platform.isAndroid) return false;
+    if (!AppPlatform.isAndroid) return false;
 
     try {
       debugPrint('[AutoBackupService] Caching backup data for auto-backup...');

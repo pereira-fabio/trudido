@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import '../platform/app_platform.dart';
 
 /// Thin wrapper around native MethodChannel 'app.perms'.
 /// All calls are idempotent + API guarded on native side; here we add
@@ -27,7 +27,7 @@ class PermissionsChannel {
   static final instance = PermissionsChannel._();
 
   Future<bool> canScheduleExactAlarms() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('canScheduleExactAlarms')) == true;
     } catch (e) {
@@ -37,7 +37,7 @@ class PermissionsChannel {
   }
 
   Future<bool> openExactAlarmSettings() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('openExactAlarmSettings')) == true;
     } catch (e) {
@@ -47,7 +47,7 @@ class PermissionsChannel {
   }
 
   Future<bool> isIgnoringBatteryOptimizations() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('isIgnoringBatteryOptimizations')) ==
           true;
@@ -58,7 +58,7 @@ class PermissionsChannel {
   }
 
   Future<bool> requestIgnoreBatteryOptimizations() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod(
             'requestIgnoreBatteryOptimizations',
@@ -71,7 +71,7 @@ class PermissionsChannel {
   }
 
   Future<bool> openBatteryOptimizationSettings() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('openBatteryOptimizationSettings')) ==
           true;
@@ -82,7 +82,7 @@ class PermissionsChannel {
   }
 
   Future<bool> areNotificationsEnabled() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('areNotificationsEnabled')) == true;
     } catch (e) {
@@ -92,7 +92,7 @@ class PermissionsChannel {
   }
 
   Future<bool> requestPostNotifications() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('requestPostNotifications')) == true;
     } catch (e) {
@@ -102,7 +102,7 @@ class PermissionsChannel {
   }
 
   Future<bool> openAppNotificationSettings() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     try {
       return (await _channel.invokeMethod('openAppNotificationSettings')) ==
           true;
@@ -113,7 +113,7 @@ class PermissionsChannel {
   }
 
   Future<int> getSdkInt() async {
-    if (!Platform.isAndroid) return 0;
+    if (!AppPlatform.isAndroid) return 0;
     try {
       final v = await _channel.invokeMethod('getSdkInt');
       return (v is int) ? v : 0;

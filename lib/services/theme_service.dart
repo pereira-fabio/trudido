@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:io' show Platform;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Removed google_fonts package to reduce APK size - using system default fonts
 import '../providers/app_providers.dart';
 import '../utils/state_notifiers.dart';
+import '../platform/app_platform.dart';
 // (preferences state accessed via preferencesStateProvider import from app_providers)
 
 // Theme provider
@@ -65,7 +65,7 @@ final dynamicColorSchemesProvider =
     ) async {
       final enabled = ref.watch(dynamicColorEnabledProvider);
       if (!enabled) return (light: null, dark: null);
-      if (!Platform.isAndroid) return (light: null, dark: null);
+      if (!AppPlatform.isAndroid) return (light: null, dark: null);
       // dynamic_color returns null if not supported (pre-Android 12)
       final palettes = await DynamicColorPlugin.getCorePalette();
       if (palettes == null) return (light: null, dark: null);

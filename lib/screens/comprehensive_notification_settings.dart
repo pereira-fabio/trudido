@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/permissions_channel.dart';
 import '../providers/alarm_settings_providers.dart';
 import '../providers/app_providers.dart';
 import '../services/notification_service.dart';
+import '../platform/app_platform.dart';
 
 class ComprehensiveNotificationSettings extends ConsumerStatefulWidget {
   const ComprehensiveNotificationSettings({super.key});
@@ -138,7 +138,7 @@ class _ComprehensiveNotificationSettingsState
                 PermissionsChannel.instance.openAppNotificationSettings(),
           ),
 
-          if (Platform.isAndroid) ...[
+          if (AppPlatform.isAndroid) ...[
             ListTile(
               leading: Icon(Icons.battery_full),
               title: const Text('Battery Settings'),
