@@ -48,16 +48,41 @@ Set these in `docker-compose.yml` under the `backend` service.
 | Variable | Default | What it does |
 | :-- | :-- | :-- |
 | `API_AUTH_TOKEN` | *(empty)* | Shared secret sent as `X-Trudido-Token`. **Empty means no authentication** — acceptable on an isolated home network, not on anything reachable from outside it. |
-| `DATABASE_URL` | `sqlite:////db/trudido.db` | Record store. Keep it on the named volume, not the NAS share — see below. |
-| `BLOB_DIR` | `/data/blobs` | Note attachments. Safe on a network share. |
+| `DATA_DIR` | `/data` | Everything: records, attachments, index. Point the volume at a share and that is where your data is. |
+| `DATABASE_URL` | `sqlite:////data/trudido.db` | Read **only** to import an older SQLite install on first start. Never written to, never deleted. |
 | `MAX_BLOB_MB` | `256` | Largest single attachment. |
 | `SYNC_PAGE_SIZE` | `500` | Records per pull page. |
 | `CORS_ORIGINS` | `*` | Browser origins allowed to call the API. |
 
-> **Why the database is not on the NAS share.** SQLite's locking is unreliable
-> over SMB and NFS and will eventually corrupt the file. The database lives on
-> a local Docker volume; attachments, which are ordinary immutable files, sit
-> on the share where your existing snapshots cover them.
+### Putting the store on a NAS share
+
+Records are individual JSON files written to a temporary name and renamed into
+place. `rename` is atomic on CIFS and NFS as well as locally, so the whole
+store is safe on a share — mount it on the host and bind it in:
+
+```yaml
+volumes:
+  - /mnt/bigboy/trudido:/data
+```
+
+```bash
+# /etc/fstab on the host
+//192.168.178.59/bigboy /mnt/bigboy cifs credentials=/root/.smbcred,uid=1000,gid=1000,vers=3.0,nofail,_netdev 0 0
+```
+
+Use the IP rather than a `.local` name: mDNS generally does not resolve inside
+containers even where it works on the host.
+
+> **This used to be impossible.** Earlier versions kept records in SQLite,
+> whose locking is unreliable over SMB and NFS — the file eventually corrupts.
+> That is a SQLite constraint, not a share one, and dropping SQLite removes it.
+> An existing SQLite store is imported automatically on first start, revisions
+> and all, so no client has to resync; the old file is left in place as a
+> fallback.
+
+A `soft` mount fails rather than hangs when the NAS is unreachable, which is
+the right choice here: the server answers `503`, the app keeps its cursor, and
+the next sync picks up where it left off.
 
 ## How sync works
 
@@ -139,15 +164,17 @@ curl -H "X-Trudido-Token: SECRET" http://<server>:8001/api/v1/sync/status
 
 | | |
 | :-- | :-- |
-| Records | SQLite at `/db/trudido.db` inside the container, on the `trudido_db` volume |
-| Attachments | `/data/blobs/<first two hex>/<sha256>` — ordinary files, on the NAS share |
+| Records | `<DATA_DIR>/records/<collection>/<id>.json` — one file each, readable |
+| Attachments | `<DATA_DIR>/blobs/<first two hex>/<sha256>`, with metadata beside each |
+| Index | `<DATA_DIR>/index.json` — a **cache**, not a source of truth |
 
 The attachments are content-addressed, so they have hashes for names and no
 extensions. That is deliberate: the same photo in three notes is stored once.
 `inspect_data.py` prints the original filename alongside each hash.
 
-The database is not meant to be browsed by hand, and doing so while the server
-is running risks lock contention. Use the script.
+`index.json` only records which revision each file is at, so a pull does not
+have to open every one. Delete it and it is rebuilt by scanning, revisions
+intact — the record files alone are always sufficient.
 
 ## Development
 
@@ -165,11 +192,14 @@ tombstones, token enforcement, and attachment integrity.
 
 ## Backups
 
-The whole store is one SQLite file plus a directory of immutable blobs:
+The whole store is a directory of files, so a backup is a copy of it:
 
 ```bash
-docker exec trudido-backend sqlite3 /db/trudido.db ".backup '/data/backup.db'"
+tar czf trudido-$(date +%F).tar.gz -C /mnt/bigboy trudido
 ```
 
-This is a *convenience* copy. The app's own export (Settings → Data) remains
-the authoritative backup, because it is readable without this server.
+Or nothing at all, if the store already sits on a share your NAS snapshots.
+That is most of the point of keeping it as files.
+
+The app's own export (Settings → Data Management) is still worth having, since
+it restores into the app directly without this server.

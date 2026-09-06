@@ -22,9 +22,9 @@ services:
     restart: unless-stopped
     environment:
       - PROJECT_NAME=Trudido Sync
+      # Everything lives here as plain files: records, attachments, index.
+      # Point the volume below at wherever you want that to be.
       - DATA_DIR=/data
-      - DATABASE_URL=sqlite:////db/trudido.db
-      - BLOB_DIR=/data/blobs
       # Empty leaves sync open, which is fine on an isolated home network.
       # Set this to any value to require it, and enter the same value in the
       # app under Settings -> Sync.
@@ -33,11 +33,20 @@ services:
       # reason this is not smaller.
       - MAX_BLOB_MB=256
     volumes:
-      # The database gets its own named volume: SQLite over an SMB/NFS mount
-      # corrupts under lock contention, so it stays on local disk while the
-      # attachments -- ordinary files -- live on the NAS share.
-      - trudido_db:/db
-      - /opt/trudido/data:/data
+      # One mount, because there is no database needing local disk any more.
+      # Records are individual JSON files written temp-then-rename, which is
+      # atomic on CIFS and NFS, so the whole store is safe on a share.
+      #
+      # Local directory (the default -- works anywhere, nothing to set up):
+      - ./data:/data
+      #
+      # Or straight onto the NAS. Mount the share on the host and bind it:
+      #   //192.168.178.59/bigboy  ->  /mnt/bigboy
+      # then swap the line above for:
+      # - /mnt/bigboy/trudido:/data
+      #
+      # Use the IP, not truenas.local: mDNS names generally do not resolve
+      # inside containers even where they work on the host.
     ports:
       - "${TRUDIDO_API_PORT:-8001}:8000"
 
@@ -56,6 +65,3 @@ services:
     ports:
       - "${TRUDIDO_WEB_PORT:-8080}:80"
 
-volumes:
-  trudido_db:
-    driver: local

@@ -17,14 +17,15 @@ def make_client(tmp_path):
     """Builds a TestClient against a fresh store, with an optional token."""
     from fastapi.testclient import TestClient
 
-    def _build(token: str = ""):
-        os.environ["DATABASE_URL"] = f"sqlite:///{tmp_path}/trudido.db"
-        os.environ["DATA_DIR"] = str(tmp_path)
-        os.environ["BLOB_DIR"] = str(tmp_path / "blobs")
+    def _build(token: str = "", database_url: str | None = None):
+        os.environ["DATA_DIR"] = str(tmp_path / "store")
+        # Defaults to a path that does not exist, so the SQLite import is a
+        # no-op except in the tests that are specifically about it.
+        os.environ["DATABASE_URL"] = database_url or f"sqlite:///{tmp_path}/absent.db"
         os.environ["API_AUTH_TOKEN"] = token
 
-        # The engine and settings are module-level, so they must be rebuilt
-        # after the environment changes.
+        # Settings and the store handle are module-level, so they must be
+        # rebuilt after the environment changes.
         for name in [
             m
             for m in list(sys.modules)

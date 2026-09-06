@@ -11,12 +11,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
+COPY inspect_data.py ./inspect_data.py
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+# Everything -- records, attachments, index -- lives under DATA_DIR as files,
+# so this can be bound straight to a NAS share.
 ENV DATA_DIR=/data
+# Read only, to import an older SQLite install on first start.
 ENV DATABASE_URL=sqlite:////data/trudido.db
-ENV BLOB_DIR=/data/blobs
 
 EXPOSE 8000
 

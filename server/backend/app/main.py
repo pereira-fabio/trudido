@@ -11,7 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import blobs, sync
 from app.core.config import settings
-from app.core.database import init_storage
+from app.core.filestore import configure_store
+from app.core.migrate_sqlite import migrate_if_needed
 from app.core.security import require_token
 
 logging.basicConfig(
@@ -22,9 +23,12 @@ log = logging.getLogger("trudido")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    init_storage()
+    store = configure_store(settings.DATA_DIR)
+    migrate_if_needed(store, settings.DATABASE_URL)
     guarded = "token required" if settings.API_AUTH_TOKEN else "OPEN (no token set)"
-    log.info("%s ready - %s", settings.PROJECT_NAME, guarded)
+    log.info(
+        "%s ready - storing in %s - %s", settings.PROJECT_NAME, store.root, guarded
+    )
     yield
 
 
@@ -33,8 +37,9 @@ app = FastAPI(
     lifespan=lifespan,
     version="1.0.0",
     description=(
-        "Self-hosted sync for Trudido. Records are stored as opaque documents; "
-        "vault notes arrive already encrypted and are never readable here."
+        "Self-hosted sync for Trudido. Records are stored as opaque JSON files "
+        "under one directory, so the whole store can live on a NAS share. "
+        "Vault notes arrive already encrypted and are never readable here."
     ),
 )
 
