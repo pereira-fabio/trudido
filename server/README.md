@@ -41,6 +41,42 @@ Then in the phone app: **Settings → Sync**, enter `http://<server>:8001` — t
 host port above, not the container's — and the token, then press
 *Test connection*.
 
+## The browser app
+
+`http://<server>:8080` serves a browser build of Trudido. nginx proxies `/api`
+to the backend from the same origin, so the address to enter under **Sync** is
+just the address of the page itself, and no CORS is involved.
+
+It keeps its own copy of the data in the browser (IndexedDB) and syncs with the
+server exactly as the phone does, so it works while the tab is open and loses
+nothing when it is closed.
+
+**It is not the whole app.** It shares the models, storage and sync client, but
+has its own, smaller interface:
+
+| Works | Does not |
+| :-- | :-- |
+| Tasks: add, edit, complete, bin, filter by folder | Reminders and notifications |
+| Notes: create, edit and preview markdown | The rich text editor |
+| Search across both | Attachments |
+| Folders | Home-screen widgets, device calendar sync |
+| Sync setup and status | The vault |
+
+Two of those are deliberate rather than merely missing:
+
+- **Notes written in the phone's rich editor open read-only.** They are stored
+  as a Quill delta, and saving markdown over one would discard its formatting
+  and its images. The text is shown; editing is refused.
+- **The vault stays on the phone.** Its key is generated per device, so these
+  notes cannot be decrypted anywhere else. That changes when key derivation
+  moves to the vault password.
+
+The reason it is a separate interface rather than the Android app compiled for
+web: about a dozen files in that app import `dart:io`, which is fine on a phone
+and cannot compile for a browser at all. Only code reachable from the entry
+point is compiled, so a separate entry point avoids them entirely -- and means
+the browser build cannot break the phone.
+
 ## Configuration
 
 Set these in `docker-compose.yml` under the `backend` service.

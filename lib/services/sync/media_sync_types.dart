@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-/// Attachment transfer, chosen per platform.
-///
-/// The native implementation keeps attachments as files and reconciles them
-/// against the server. A browser has no such directory -- and no need for one,
-/// since it can fetch a blob straight from the server when a note asks to
-/// display it -- so the web build gets a no-op and saves the round trip.
+/// Shared by both the native and browser implementations of [MediaSync].
 library;
 
-export 'media_sync_types.dart';
-export 'media_sync_web.dart' if (dart.library.io) 'media_sync_io.dart';
+/// Result of one attachment pass, for the status line.
+class MediaSyncResult {
+  final int uploaded;
+  final int downloaded;
+  final int failed;
+
+  const MediaSyncResult({
+    this.uploaded = 0,
+    this.downloaded = 0,
+    this.failed = 0,
+  });
+
+  bool get didSomething => uploaded > 0 || downloaded > 0;
+}

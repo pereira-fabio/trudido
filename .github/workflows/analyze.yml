@@ -41,7 +41,7 @@ jobs:
       # compiles: dart:io is legal on Android and fatal here, so nothing else
       # catches a stray import. Roughly two minutes, and no secrets needed.
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --release -t lib/main_web.dart
 
   server:
     runs-on: ubuntu-latest

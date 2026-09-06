@@ -50,11 +50,9 @@ services:
     ports:
       - "${TRUDIDO_API_PORT:-8001}:8000"
 
-  # The browser build is not wired up yet, so this service sits behind a
-  # profile and `docker compose up -d` brings up the backend alone. Delete the
-  # `profiles:` line once server/web/Dockerfile exists.
+  # The browser app. nginx serves the Flutter build and proxies /api to the
+  # backend, so the app is reachable at one address with no CORS involved.
   web:
-    profiles: ["web"]
     build:
       context: .
       dockerfile: server/web/Dockerfile

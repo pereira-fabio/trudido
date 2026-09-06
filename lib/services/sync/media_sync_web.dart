@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-/// Attachment transfer, chosen per platform.
-///
-/// The native implementation keeps attachments as files and reconciles them
-/// against the server. A browser has no such directory -- and no need for one,
-/// since it can fetch a blob straight from the server when a note asks to
-/// display it -- so the web build gets a no-op and saves the round trip.
-library;
+import 'media_sync_types.dart';
+import 'sync_api_client.dart';
 
-export 'media_sync_types.dart';
-export 'media_sync_web.dart' if (dart.library.io) 'media_sync_io.dart';
+/// Browser build: nothing to reconcile.
+///
+/// There is no local attachment directory to compare against, so there is
+/// nothing to upload and nothing worth pre-fetching. Images are resolved
+/// straight from the server when a note displays one.
+class MediaSync {
+  const MediaSync();
+
+  Future<MediaSyncResult> run(SyncApiClient client) async =>
+      const MediaSyncResult();
+}
