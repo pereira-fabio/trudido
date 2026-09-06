@@ -22,6 +22,30 @@ jobs:
         with:
           flutter-version: "3.47.2"
 
+      # Fail in seconds rather than seven minutes in. Without these, the
+      # keystore file is decoded from an empty string and the build dies at
+      # signing with "Tag number over 30 is not supported", which says nothing
+      # about the actual cause.
+      - name: Check signing secrets are configured
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          missing=""
+          [ -n "$KEYSTORE_BASE64" ]   || missing="$missing KEYSTORE_BASE64"
+          [ -n "$KEYSTORE_PASSWORD" ] || missing="$missing KEYSTORE_PASSWORD"
+          [ -n "$KEY_PASSWORD" ]      || missing="$missing KEY_PASSWORD"
+          [ -n "$KEY_ALIAS" ]         || missing="$missing KEY_ALIAS"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing"
+            echo "::error::Add them under Settings -> Secrets and variables -> Actions."
+            echo "::error::KEYSTORE_BASE64 is 'base64 -w0 trudido-release-key.jks'."
+            exit 1
+          fi
+          echo "All four signing secrets are present."
+
       - name: Restore keystore
         run: |
           mkdir -p $HOME/Documents/keystores

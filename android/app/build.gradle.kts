@@ -50,11 +50,16 @@ android {
             val keystorePath = System.getenv("TRUDIDO_KEYSTORE")
                 ?: "D:/keystores/trudido-release-key.jks"
             val keystoreFile = file(keystorePath)
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
 
-            // Only configure signing if keystore exists and env vars are set
-            if (keystoreFile.exists() && System.getenv("KEYSTORE_PASSWORD") != null) {
+            // Only sign when there is genuinely something to sign with. An
+            // unset GitHub secret arrives as an empty string rather than as
+            // absent, so a null check alone accepts it, and the build then
+            // fails deep in signPlaystoreReleaseBundle with an opaque JKS
+            // parse error instead of just skipping signing.
+            if (keystoreFile.exists() && !keystorePassword.isNullOrEmpty()) {
                 storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                storePassword = keystorePassword
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             }
